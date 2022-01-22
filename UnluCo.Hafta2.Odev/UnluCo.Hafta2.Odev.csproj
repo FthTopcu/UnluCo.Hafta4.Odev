@@ -14,12 +14,4 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Application\StudentOperations\Commands\CreateStudent\" />
-    <Folder Include="Application\StudentOperations\Commands\DeleteStudent\" />
-    <Folder Include="Application\StudentOperations\Commands\UpdateStudent\" />
-    <Folder Include="Application\StudentOperations\Queries\GetStudentDetail\" />
-    <Folder Include="Application\StudentOperations\Queries\GetStudents\" />
-  </ItemGroup>
-
 </Project>
