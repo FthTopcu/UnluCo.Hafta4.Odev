@@ -1,102 +1,94 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using UnluCo.Hafta2.Odev.Entities;
+using UnluCo.Hafta2.Odev.Application.StudentOperations.Commands.CreateStudent;
+using UnluCo.Hafta2.Odev.Application.StudentOperations.Commands.DeleteStudent;
+using UnluCo.Hafta2.Odev.Application.StudentOperations.Commands.UpdateStudent;
+using UnluCo.Hafta2.Odev.Application.StudentOperations.Queries.GetStudentDetail;
+using UnluCo.Hafta2.Odev.Application.StydentOperations.Queries.GetStudents;
+using UnluCo.Hafta2.Odev.DBOperations;
+using static UnluCo.Hafta2.Odev.Application.StudentOperations.Commands.CreateStudent.CreateStudentCommand;
+using static UnluCo.Hafta2.Odev.Application.StudentOperations.Commands.UpdateStudent.UpdateStudentCommand;
 
 namespace UnluCo.Hafta2.Odev.Controllers
 {
+    [Authorize]
     [Route("[controller]s")]
     [ApiController]
     public class StudentController : ControllerBase
     {
-        private static List<Student> StudentList = new List<Student>()
+        private readonly ISchoolDbContext _context;
+        private readonly IMapper _mapper;
+
+        public StudentController(ISchoolDbContext context, IMapper mapper)
         {
-            new Student {Id = 1,Name ="Fatih",Surname="Topcu",Email="fatih@mail.com",SchoolId=1},
-            new Student {Id = 2,Name ="Arif",Surname="Paşa",Email="arif@mail.com",SchoolId=2},
-            new Student {Id = 3,Name ="Celal",Surname="Bayar",Email="Celal@mail.com",SchoolId=3}
-           
-        };
+            _context = context;
+            _mapper = mapper;
+
+        }
+
         [HttpGet]
-        public IActionResult GetSchools()
+        public IActionResult GetStudents()
         {
-            var studentList = StudentList.OrderBy(x => x.Id);
-
-            return Ok(studentList);
-
+            GetStudentsQuery query = new GetStudentsQuery(_context, _mapper);
+            var result = query.Handle();
+            return Ok(result);
         }
-        [HttpGet("{colon}/{orderby}")]
-        public IActionResult GetSchools(string colon = "id", string orderby = "asc")
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
         {
-            var studentList = StudentList;
-            if (colon.ToLower() == "id" && orderby.ToLower() == "asc")
-            {
-                studentList = StudentList.OrderBy(x => x.Id).ToList();
-            }
-            else if (colon.ToLower() == "id" && orderby.ToLower() == "desc")
-            {
-                studentList = StudentList.OrderByDescending(x => x.Id).ToList();
-            }
-            else if (colon.ToLower() == "name" && orderby.ToLower() == "asc")
-            {
-                studentList = StudentList.OrderBy(x => x.Name).ToList();
-            }
-            else if (colon.ToLower() == "name" && orderby.ToLower() == "desc")
-            {
-                studentList = StudentList.OrderByDescending(x => x.Name).ToList();
-            }
-            else
-            {
-                BadRequest("Yanlış sıralama tercihleri yapılıdı.");
-            }
+            StudentDetailViewModel result;
 
+            GetStudentDetailQuery query = new GetStudentDetailQuery(_mapper,_context);
+            query.StudentId = id;
+            GetStudentDetailQueryValidator validator = new GetStudentDetailQueryValidator();
+            validator.ValidateAndThrow(query);
+            result = query.Handle();
 
-            return Ok(studentList);
-
+            return Ok(result);
         }
 
-        [HttpGet("id")]
-        public IActionResult GetSchoolById(int id)
-        {
-            var student = StudentList.SingleOrDefault(x => x.Id == id);
-            if (student == null)
-                return NotFound("Öğrenci Bulunamadı.");
-            return Ok(student);
-        }
+
+        //Post
         [HttpPost]
-        public IActionResult AddSchool([FromBody] Student newStudent)
+        public IActionResult AddStudent([FromBody] CreateStudentModel newStudent)
         {
-            var student = StudentList.SingleOrDefault(x => x.Id == newStudent.Id);
-            if (student != null)
-                return NotFound("Eklenmek istenen öğrenci bulunuyor");
-            StudentList.Add(newStudent);
-            return Created("Öğrenci Eklendi", newStudent);
+            CreateStudentCommand command = new CreateStudentCommand(_context, _mapper);
+            command.Model = newStudent;
+            CreateStudentCommandValidator validator = new CreateStudentCommandValidator();
+            validator.ValidateAndThrow(command);//valide et hatayı fırlat
+            command.Handle();
 
-        }
-        [HttpPut("id")]
-        public IActionResult UpdateSchool(int id, [FromBody] Student newStudent)
-        {
-            var student = StudentList.SingleOrDefault(x => x.Id == id);
-            if (student == null)
-                return NotFound("Güncellenmek İstenen Öğrenci Bulunamadı.");
-
-            student.Name = newStudent.Name != default ? newStudent.Name : student.Name;
-            student.Surname = newStudent.Surname != default ? newStudent.Surname : student.Surname;
-            student.Email = newStudent.Email != default ? newStudent.Email : student.Email;
-            return Ok(student);
-        }
-        [HttpDelete("id")]
-        public IActionResult DeleteSchool(int id)
-        {
-            var student = StudentList.SingleOrDefault(x => x.Id == id);
-            if (student == null)
-                return NotFound("Öğrenci Bulunamadı.");
-            StudentList.Remove(student);
-            return Ok(student);
+            return Ok();
         }
 
+        //Put
+        [HttpPut("{id}")]
+        public IActionResult UpdateStudent(int id, [FromBody] UpdateStudentModel updatedStudent)
+        {
+            UpdateStudentCommand command = new UpdateStudentCommand(_context);
+            command.StudentId = id;
+            command.Model = updatedStudent;
+
+            UpdateStudentCommandValidator validator = new UpdateStudentCommandValidator();
+            validator.ValidateAndThrow(command);
+            command.Handle();
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteStudent(int id)
+        {
+            DeleteStudentCommand command = new DeleteStudentCommand(_context);
+            command.StudentId = id;
+            DeleteStudentCommandValidator validator = new DeleteStudentCommandValidator();
+            validator.ValidateAndThrow(command);
+            command.Handle();
+
+            return Ok();
+        } 
 
     }
 }

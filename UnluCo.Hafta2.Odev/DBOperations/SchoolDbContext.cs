@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using UnluCo.Hafta2.Odev.Entities;
 
 namespace UnluCo.Hafta2.Odev.DBOperations
@@ -14,5 +15,13 @@ namespace UnluCo.Hafta2.Odev.DBOperations
         {
             return base.SaveChanges();
         }
+        public static List<User> userlist = new List<User>
+        {
+            new User
+            {
+                Username = "dnm",
+                Password="dnm"
+            }
+        };
     }
 }

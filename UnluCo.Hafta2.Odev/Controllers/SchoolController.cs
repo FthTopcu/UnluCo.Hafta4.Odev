@@ -10,11 +10,15 @@ using static UnluCo.Hafta2.Odev.Application.SchoolOperations.Commands.UpdateScho
 using UnluCo.Hafta2.Odev.Application.SchoolOperations.Commands.UpdateSchool;
 using UnluCo.Hafta2.Odev.Application.SchoolOperations.Queries.GetSchools;
 using UnluCo.Hafta2.Odev.Application.SchoolOperations.Queries.GetSchoolDetail;
+using Microsoft.AspNetCore.Authorization;
+using UnluCo.Hafta2.Odev.Filters;
 
 namespace UnluCo.Hafta2.Odev.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]s")]
+    
     public class SchoolController : ControllerBase
     {
         private readonly ISchoolDbContext _context;
